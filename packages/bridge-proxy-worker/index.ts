@@ -16,27 +16,39 @@ type ResponseObject = Omit<Response, 'text'> & { text: string };
 
 const work = async (serverHost: string, connectorHost: string) => {
   const connectorResponse = await fetch(connectorHost);
-  const data: { key?: string; requestObject?: RequestObject } = await connectorResponse.json();
-  if (!('key' in data)) {
+  const requestData: { key?: `request:${string}`; requestObject?: RequestObject } = await connectorResponse.json();
+  if (!('key' in requestData)) {
     return;
   }
-  if (!data.key) {
+  if (!requestData.key) {
     return;
   }
-  if (!('requestObject' in data)) {
+  if (!('requestObject' in requestData)) {
     return;
   }
-  if (!data.requestObject) {
+  if (!requestData.requestObject) {
     return;
   }
   const [serverHostname, serverPort] = serverHost.split(':');
-  const url = new URL(data.requestObject.url);
+  const url = new URL(requestData.requestObject.url);
   url.hostname = serverHostname;
   if (serverPort) {
     url.port = serverPort;
   }
-  const serverResponse = await fetch(url, { headers: data.requestObject.headers, body: data.requestObject.text})
-  await fetch(connectorHost, {method: 'POST'})
+  const serverResponse = await fetch(url, {
+    headers: requestData.requestObject.headers,
+    body: requestData.requestObject.text,
+  });
+  const status = serverResponse.status;
+  const statusText = serverResponse.statusText;
+  const headers = Object.fromEntries([...serverResponse.headers.entries()]);
+  const text = await serverResponse.text();
+  const object = { status, statusText, headers, text };
+  await fetch(connectorHost, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(object),
+  });
 };
 
 Promise.resolve().then(async () => {
