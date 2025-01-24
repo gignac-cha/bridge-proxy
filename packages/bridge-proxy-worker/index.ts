@@ -17,8 +17,8 @@ type ResponseObject = Omit<Response, 'text'> & { text: string };
 const work = async (serverHost: string, connectorHost: string) => {
   console.log('* start work');
   const connectorResponse = await fetch(connectorHost);
-  console.log(`* status: ${connectorResponse.status}`);
-  console.log(`* statusText: ${connectorResponse.statusText}`);
+  console.log(`* connector response status: ${connectorResponse.status}`);
+  console.log(`* connector response statusText: ${connectorResponse.statusText}`);
   if (connectorResponse.status === 204) {
     return;
   }
@@ -45,11 +45,17 @@ const work = async (serverHost: string, connectorHost: string) => {
   if (serverPort) {
     url.port = serverPort;
   }
+  console.log(`* request url: ${url.toString()}`);
+  console.log(`* request method: ${requestData.requestObject.method}`);
+  console.log(`* request headers: ${requestData.requestObject.headers}`);
+  console.log(`* request body: ${requestData.requestObject.text}`);
   const serverResponse = await fetch(url, {
     method: requestData.requestObject.method,
     headers: requestData.requestObject.headers,
     body: ['HEAD', 'GET'].includes(requestData.requestObject.method) ? undefined : requestData.requestObject.text,
   });
+  console.log(`* server response status: ${connectorResponse.status}`);
+  console.log(`* server response statusText: ${connectorResponse.statusText}`);
   const key = `response:${requestData.key.replace(/^request:/, '')}` as const;
   const status = serverResponse.status;
   const statusText = serverResponse.statusText;
