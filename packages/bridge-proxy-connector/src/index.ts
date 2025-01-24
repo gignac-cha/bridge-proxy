@@ -11,18 +11,6 @@
  * Learn more at https://developers.cloudflare.com/workers/
  */
 
-const addRequest = (request: Request, env: Env) => {
-	const key = `request:${new Date().toISOString()}:${crypto.randomUUID()}`
-	const url = request.url
-	const headers = Object.fromEntries([...request.headers.entries()])
-	const blob = await request.blob()
-	const object = {url,
-		headers,
-	}
-	const value = btoa(JSON.stringify(object))
-	env.bridge_proxy_cache.put(key, value)
-}
-
 export default {
 	async fetch(request, env, ctx): Promise<Response> {
 		return new Response('Hello World!');
