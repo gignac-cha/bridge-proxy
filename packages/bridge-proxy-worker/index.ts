@@ -41,6 +41,7 @@ const work = async (serverHost: string, connectorHost: string) => {
   }
   const [serverHostname, serverPort] = serverHost.split(':');
   const url = new URL(requestData.requestObject.url);
+  url.protocol = 'http:';
   url.hostname = serverHostname;
   if (serverPort) {
     url.port = serverPort;
@@ -51,7 +52,7 @@ const work = async (serverHost: string, connectorHost: string) => {
   console.log(`* request body: ${requestData.requestObject.text}`);
   const serverResponse = await fetch(url, {
     method: requestData.requestObject.method,
-    // headers: requestData.requestObject.headers,
+    headers: requestData.requestObject.headers,
     body: ['HEAD', 'GET'].includes(requestData.requestObject.method) ? undefined : requestData.requestObject.text,
   });
   console.log(`* server response status: ${connectorResponse.status}`);
