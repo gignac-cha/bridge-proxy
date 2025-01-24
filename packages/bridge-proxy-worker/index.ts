@@ -15,19 +15,23 @@ type RequestObject = Omit<Request, 'text'> & { text: string };
 type ResponseObject = Omit<Response, 'text'> & { text: string };
 
 const work = async (serverHost: string, connectorHost: string) => {
-  console.log()
+  console.log('* start work');
   const connectorResponse = await fetch(connectorHost);
   const requestData: { key?: `request:${string}`; requestObject?: RequestObject } = await connectorResponse.json();
   if (!('key' in requestData)) {
+    console.log(`- 'key' not found`);
     return;
   }
   if (!requestData.key) {
+    console.log(`- 'key' not found`);
     return;
   }
   if (!('requestObject' in requestData)) {
+    console.log(`- 'requestObject' not found`);
     return;
   }
   if (!requestData.requestObject) {
+    console.log(`- 'requestObject' not found`);
     return;
   }
   const [serverHostname, serverPort] = serverHost.split(':');
@@ -50,6 +54,7 @@ const work = async (serverHost: string, connectorHost: string) => {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(object),
   });
+  console.log('* end work');
 };
 
 Promise.resolve().then(async () => {
