@@ -22,7 +22,7 @@ const getRequest = async (env: Env) => {
 			throw new Error(`'value' is ${value}`);
 		}
 		const requestObject: RequestObject = JSON.parse(atob(value));
-		return { key, requestObject };
+		return { key: key.name, requestObject };
 	}
 	return;
 };

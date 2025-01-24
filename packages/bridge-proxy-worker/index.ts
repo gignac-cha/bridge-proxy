@@ -57,6 +57,7 @@ const work = async (serverHost: string, connectorHost: string) => {
   });
   console.log(`* server response status: ${connectorResponse.status}`);
   console.log(`* server response statusText: ${connectorResponse.statusText}`);
+  console.log(`* server response headers: ${JSON.stringify(Object.fromEntries([...serverResponse.headers.entries()]), null, 2)}`);
   const key = `response:${requestData.key.replace(/^request:/, '')}` as const;
   const status = serverResponse.status;
   const statusText = serverResponse.statusText;
