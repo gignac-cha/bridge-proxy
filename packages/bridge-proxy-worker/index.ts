@@ -48,7 +48,7 @@ const work = async (serverHost: string, connectorHost: string) => {
   const serverResponse = await fetch(url, {
     method: requestData.requestObject.method,
     headers: requestData.requestObject.headers,
-    body: requestData.requestObject.text,
+    body: ['HEAD', 'GET'].includes(requestData.requestObject.method) ? undefined : requestData.requestObject.text,
   });
   const key = `response:${requestData.key.replace(/^request:/, '')}` as const;
   const status = serverResponse.status;
