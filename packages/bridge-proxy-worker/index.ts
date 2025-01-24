@@ -15,6 +15,7 @@ type RequestObject = Omit<Request, 'text'> & { text: string };
 type ResponseObject = Omit<Response, 'text'> & { text: string };
 
 const work = async (serverHost: string, connectorHost: string) => {
+  console.log()
   const connectorResponse = await fetch(connectorHost);
   const requestData: { key?: `request:${string}`; requestObject?: RequestObject } = await connectorResponse.json();
   if (!('key' in requestData)) {
