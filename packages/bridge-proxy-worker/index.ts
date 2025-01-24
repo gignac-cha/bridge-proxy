@@ -47,7 +47,7 @@ const work = async (serverHost: string, connectorHost: string) => {
   }
   console.log(`* request url: ${url.toString()}`);
   console.log(`* request method: ${requestData.requestObject.method}`);
-  console.log(`* request headers: ${requestData.requestObject.headers}`);
+  console.log(`* request headers: ${JSON.stringify(requestData.requestObject.headers, null, 2)}`);
   console.log(`* request body: ${requestData.requestObject.text}`);
   const serverResponse = await fetch(url, {
     method: requestData.requestObject.method,
