@@ -31,13 +31,25 @@ const setResponse = async (key: `response:${string}`, responseObject: ResponseOb
 	await env.bridge_proxy_cache.put(key, btoa(JSON.stringify(responseObject)));
 };
 
+const json = async (promiseOrResponse: Response | Promise<Response>) => {
+	const response = await promiseOrResponse;
+	response.headers.set('Content-Type', 'application/json');
+	return new Response(await response.text(), response);
+};
+const cors = async (promiseOrResponse: Response | Promise<Response>) => {
+	const response = await promiseOrResponse;
+	response.headers.set('Access-Control-Allow-Methods', '*');
+	response.headers.set('Access-Control-Allow-Origin', '*');
+	return new Response(await response.text(), response);
+};
+
 export default {
 	async fetch(request, env, ctx): Promise<Response> {
 		switch (request.method) {
 			case 'GET': {
 				const result = await getRequest(env);
 				if (!result) {
-					return new Response(JSON.stringify({}), { status: 204, headers: { 'Content-Type': 'application/json' } });
+					return cors(json(new Response(JSON.stringify({}), { status: 204 })));
 				}
 				return new Response(JSON.stringify(result), {
 					headers: { 'Content-Type': 'application/json' },
@@ -46,9 +58,9 @@ export default {
 			case 'POST': {
 				const result: { key: `response:${string}`; responseObject: ResponseObject } = await request.json();
 				await setResponse(result.key, result.responseObject, env);
-				return new Response(JSON.stringify({}), { status: 201, headers: { 'Content-Type': 'application/json' } });
+				return cors(json(new Response(JSON.stringify({}), { status: 201 })));
 			}
 		}
-		return new Response(JSON.stringify({}), { status: 405, headers: { 'Content-Type': 'application/json' } });
+		return cors(json(new Response(JSON.stringify({}), { status: 405 })));
 	},
 } satisfies ExportedHandler<Env>;

@@ -76,10 +76,17 @@ const getResponse = async (key: `response:${string}`, env: Env) => {
 
 const convertKey = (key: `request:${string}`) => `response:${key.replace(/^request:/, '')}` as const;
 
+const cors = async (promiseOrResponse: Response | Promise<Response>) => {
+	const response = await promiseOrResponse;
+	response.headers.set('Access-Control-Allow-Methods', '*');
+	response.headers.set('Access-Control-Allow-Origin', '*');
+	return new Response(await response.text(), response);
+};
+
 export default {
 	async fetch(request, env, ctx): Promise<Response> {
 		const key = await addRequest(request, env);
-		return getResponse(convertKey(key), env);
+		return cors(getResponse(convertKey(key), env));
 		// try {
 		// } catch (error) {
 		// 	if (error instanceof Error) {

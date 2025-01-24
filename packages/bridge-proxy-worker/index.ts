@@ -17,6 +17,8 @@ type ResponseObject = Omit<Response, 'text'> & { text: string };
 const work = async (serverHost: string, connectorHost: string) => {
   console.log('* start work');
   const connectorResponse = await fetch(connectorHost);
+  console.log(`* status: ${connectorResponse.status}`);
+  console.log(`* statusText: ${connectorResponse.statusText}`);
   const requestData: { key?: `request:${string}`; requestObject?: RequestObject } = await connectorResponse.json();
   if (!('key' in requestData)) {
     console.log(`- 'key' not found`);
@@ -44,11 +46,13 @@ const work = async (serverHost: string, connectorHost: string) => {
     headers: requestData.requestObject.headers,
     body: requestData.requestObject.text,
   });
+  const key = `response:${requestData.key.replace(/^request:/, '')}` as const;
   const status = serverResponse.status;
   const statusText = serverResponse.statusText;
   const headers = Object.fromEntries([...serverResponse.headers.entries()]);
   const text = await serverResponse.text();
-  const object = { status, statusText, headers, text };
+  const responseObject = { status, statusText, headers, text };
+  const object = { key, responseObject };
   await fetch(connectorHost, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -70,6 +74,8 @@ Promise.resolve().then(async () => {
   if (!process.env.BRIDGE_PROXY_CONNECTOR_HOST) {
     throw Error(`'BRIDGE_PROXY_CONNECTOR_HOST' is not defined.`);
   }
+  console.log(`* target server host: ${process.env.TARGET_SERVER_HOST}`);
+  console.log(`* bridge proxy connector host: ${process.env.BRIDGE_PROXY_CONNECTOR_HOST}`);
   while (true) {
     await work(process.env.TARGET_SERVER_HOST, process.env.BRIDGE_PROXY_CONNECTOR_HOST);
     // await timeout(1000 / 6);
