@@ -35,7 +35,7 @@ const raceWithTimeout = async (promises: Promise<unknown>[], timeout: number) =>
 };
 
 const addRequest = async (request: Request, env: Env) => {
-	const key = `request:${new Date().toISOString()}:${crypto.randomUUID()}`;
+	const key = `request:${new Date().toISOString()}:${crypto.randomUUID()}` as const;
 	const url = request.url;
 	const headers = Object.fromEntries([...request.headers.entries()]);
 	const text = await request.text();
@@ -44,7 +44,7 @@ const addRequest = async (request: Request, env: Env) => {
 	await env.bridge_proxy_cache.put(key, value);
 	return key;
 };
-const getResponse = async (key: string, env: Env) => {
+const getResponse = async (key: `response:${string}`, env: Env) => {
 	const abortController = new AbortController();
 	return Promise.race([
 		new Promise<Response>((resolve, reject) => {
@@ -55,7 +55,11 @@ const getResponse = async (key: string, env: Env) => {
 					reject();
 				} else if (value) {
 					const object = JSON.parse(atob(value));
-					const response = new Response(object.text, { headers: object.headers });
+					const response = new Response(object.text, {
+						status: object.status,
+						statusText: object.statusText,
+						headers: object.headers,
+					});
 					resolve(response);
 				} else {
 					setTimeout(callback, 1000);
@@ -67,19 +71,21 @@ const getResponse = async (key: string, env: Env) => {
 	]);
 };
 
+const convertKey = (key: `request:${string}`) => `response:${key.replace(/^request:/, '')}` as const;
+
 export default {
 	async fetch(request, env, ctx): Promise<Response> {
 		const key = await addRequest(request, env);
-		try {
-			return getResponse(key.replace('request'), env);
-		} catch (error) {
-			if (error instanceof Error) {
-				return new Response(JSON.stringify({ name: error.name, message: error.message }), {
-					status: 500,
-					headers: { 'Content-Type': 'application/json' },
-				});
-			}
-			return new Response(`${error}`, { status: 500 });
-		}
+		return getResponse(convertKey(key), env);
+		// try {
+		// } catch (error) {
+		// 	if (error instanceof Error) {
+		// 		return new Response(JSON.stringify({ name: error.name, message: error.message }), {
+		// 			status: 500,
+		// 			headers: { 'Content-Type': 'application/json' },
+		// 		});
+		// 	}
+		// 	return new Response(`${error}`, { status: 500 });
+		// }
 	},
 } satisfies ExportedHandler<Env>;
