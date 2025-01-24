@@ -46,9 +46,9 @@ export default {
 			case 'POST': {
 				const result: { key: `response:${string}`; responseObject: ResponseObject } = await request.json();
 				await setResponse(result.key, result.responseObject, env);
-				return new Response('', { status: 201 });
+				return new Response(JSON.stringify({}), { status: 201, headers: { 'Content-Type': 'application/json' } });
 			}
 		}
-		return new Response('', { status: 405 });
+		return new Response(JSON.stringify({}), { status: 405, headers: { 'Content-Type': 'application/json' } });
 	},
 } satisfies ExportedHandler<Env>;
