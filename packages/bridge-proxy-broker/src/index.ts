@@ -39,10 +39,11 @@ type ResponseObject = Omit<Response, 'text'> & { text: string };
 
 const addRequest = async (request: Request, env: Env) => {
 	const key = `request:${new Date().toISOString()}:${crypto.randomUUID()}` as const;
+	const method = request.method;
 	const url = request.url;
 	const headers = Object.fromEntries([...request.headers.entries()]);
 	const text = await request.text();
-	const object = { url, headers, text };
+	const object = { method, url, headers, text };
 	const value = btoa(JSON.stringify(object));
 	await env.bridge_proxy_cache.put(key, value);
 	return key;

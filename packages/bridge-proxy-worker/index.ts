@@ -46,6 +46,7 @@ const work = async (serverHost: string, connectorHost: string) => {
     url.port = serverPort;
   }
   const serverResponse = await fetch(url, {
+    method: requestData.requestObject.method,
     headers: requestData.requestObject.headers,
     body: requestData.requestObject.text,
   });
