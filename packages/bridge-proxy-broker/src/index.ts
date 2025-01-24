@@ -11,16 +11,28 @@
  * Learn more at https://developers.cloudflare.com/workers/
  */
 
-const addRequest = (request: Request, env: Env) => {
-	const key = `request:${new Date().toISOString()}:${crypto.randomUUID()}`
-	const url = request.url
-	const headers = Object.fromEntries([...request.headers.entries()])
-	const blob = await request.blob()
-	const object = {url,
-		headers,
+const 
+
+const addRequest = async (request: Request, env: Env) => {
+	const key = `request:${new Date().toISOString()}:${crypto.randomUUID()}`;
+	const url = request.url;
+	const headers = Object.fromEntries([...request.headers.entries()]);
+	const text = await request.text();
+	const object = { url, headers, text };
+	const value = btoa(JSON.stringify(object));
+	await env.bridge_proxy_cache.put(key, value);
+	return key
+};
+const getResponse = async (key: string, env: Env) => {
+	const callback = async () => {
+		const value = await env.bridge_proxy_cache.get(key)
+		if (value) {
+
+		} else {
+			setTimeout(callback, 1000)
+		}
 	}
-	const value = btoa(JSON.stringify(object))
-	env.bridge_proxy_cache.put(key, value)
+	setTimeout(callback)
 }
 
 export default {
