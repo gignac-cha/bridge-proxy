@@ -11,8 +11,8 @@
  * Learn more at https://developers.cloudflare.com/workers/
  */
 
-type RequestObject = Request & { text: string };
-type ResponseObject = Response & { text: string };
+type RequestObject = Omit<Request, 'text'> & { text: string };
+type ResponseObject = Omit<Response, 'text'> & { text: string };
 
 const getRequest = async (env: Env) => {
 	const { keys } = await env.bridge_proxy_cache.list({ prefix: 'request:', limit: 1 });

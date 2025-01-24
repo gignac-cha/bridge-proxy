@@ -34,6 +34,9 @@ const raceWithTimeout = async (promises: Promise<unknown>[], timeout: number) =>
 	]);
 };
 
+type RequestObject = Omit<Request, 'text'> & { text: string };
+type ResponseObject = Omit<Response, 'text'> & { text: string };
+
 const addRequest = async (request: Request, env: Env) => {
 	const key = `request:${new Date().toISOString()}:${crypto.randomUUID()}` as const;
 	const url = request.url;
@@ -54,7 +57,7 @@ const getResponse = async (key: `response:${string}`, env: Env) => {
 				if (abortController.signal.aborted) {
 					reject();
 				} else if (value) {
-					const object = JSON.parse(atob(value));
+					const object: ResponseObject = JSON.parse(atob(value));
 					const response = new Response(object.text, {
 						status: object.status,
 						statusText: object.statusText,
