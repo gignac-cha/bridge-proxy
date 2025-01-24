@@ -49,7 +49,7 @@ export default {
 			case 'GET': {
 				const result = await getRequest(env);
 				if (!result) {
-					return cors(json(new Response(JSON.stringify({}), { status: 204 })));
+					return cors(new Response('', { status: 204 }));
 				}
 				return new Response(JSON.stringify(result), {
 					headers: { 'Content-Type': 'application/json' },

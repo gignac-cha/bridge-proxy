@@ -19,6 +19,9 @@ const work = async (serverHost: string, connectorHost: string) => {
   const connectorResponse = await fetch(connectorHost);
   console.log(`* status: ${connectorResponse.status}`);
   console.log(`* statusText: ${connectorResponse.statusText}`);
+  if (connectorResponse.status === 204) {
+    return;
+  }
   const requestData: { key?: `request:${string}`; requestObject?: RequestObject } = await connectorResponse.json();
   if (!('key' in requestData)) {
     console.log(`- 'key' not found`);
