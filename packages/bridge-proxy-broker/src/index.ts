@@ -45,19 +45,41 @@ const addRequest = async (request: Request, env: Env) => {
 	return key;
 };
 const getResponse = async (key: string, env: Env) => {
-	
-	const callback = async () => {
-		const value = await env.bridge_proxy_cache.get(key);
-		if (value) {
-		} else {
-			setTimeout(callback, 1000);
-		}
-	};
-	setTimeout(callback);
+	const abortController = new AbortController();
+	return Promise.race([
+		new Promise<Response>((resolve, reject) => {
+			abortController.signal.addEventListener('abort', reject);
+			const callback = async () => {
+				const value = await env.bridge_proxy_cache.get(key);
+				if (abortController.signal.aborted) {
+					reject();
+				} else if (value) {
+					const object = JSON.parse(atob(value));
+					const response = new Response(object.text, { headers: object.headers });
+					resolve(response);
+				} else {
+					setTimeout(callback, 1000);
+				}
+			};
+			setTimeout(callback);
+		}),
+		new Promise<Response>((resolve, reject) => setTimeout(reject, 60 * 1000)),
+	]);
 };
 
 export default {
 	async fetch(request, env, ctx): Promise<Response> {
-		return new Response('Hello World!');
+		const key = await addRequest(request, env);
+		try {
+			return getResponse(key.replace('request'), env);
+		} catch (error) {
+			if (error instanceof Error) {
+				return new Response(JSON.stringify({ name: error.name, message: error.message }), {
+					status: 500,
+					headers: { 'Content-Type': 'application/json' },
+				});
+			}
+			return new Response(`${error}`, { status: 500 });
+		}
 	},
 } satisfies ExportedHandler<Env>;
