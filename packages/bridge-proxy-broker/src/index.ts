@@ -11,7 +11,28 @@
  * Learn more at https://developers.cloudflare.com/workers/
  */
 
-const 
+const raceWithTimeout = async (promises: Promise<unknown>[], timeout: number) => {
+	let rejects: ((reason?: any) => void)[] = [];
+	const abortController = new AbortController();
+	abortController.signal.addEventListener('abort', () => {
+		rejects.forEach((reject) => reject());
+	});
+	return await Promise.race([
+		...promises.map(
+			(promise) =>
+				new Promise(async (resolve, reject) => {
+					rejects.push(reject);
+					resolve(await promise);
+				}),
+		),
+		new Promise((resolve, reject) =>
+			setTimeout(() => {
+				abortController.abort();
+				reject();
+			}, timeout),
+		),
+	]);
+};
 
 const addRequest = async (request: Request, env: Env) => {
 	const key = `request:${new Date().toISOString()}:${crypto.randomUUID()}`;
@@ -21,19 +42,19 @@ const addRequest = async (request: Request, env: Env) => {
 	const object = { url, headers, text };
 	const value = btoa(JSON.stringify(object));
 	await env.bridge_proxy_cache.put(key, value);
-	return key
+	return key;
 };
 const getResponse = async (key: string, env: Env) => {
+	
 	const callback = async () => {
-		const value = await env.bridge_proxy_cache.get(key)
+		const value = await env.bridge_proxy_cache.get(key);
 		if (value) {
-
 		} else {
-			setTimeout(callback, 1000)
+			setTimeout(callback, 1000);
 		}
-	}
-	setTimeout(callback)
-}
+	};
+	setTimeout(callback);
+};
 
 export default {
 	async fetch(request, env, ctx): Promise<Response> {
