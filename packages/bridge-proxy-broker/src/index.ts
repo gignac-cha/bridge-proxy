@@ -74,6 +74,9 @@ const getResponse = async (key: `response:${string}`, env: Env) => {
 		new Promise<Response>((resolve, reject) => setTimeout(reject, 60 * 1000)),
 	]);
 };
+const removeResponse = async (key: `response:${string}`, env: Env) => {
+	await env.bridge_proxy_cache.delete(key);
+};
 
 const convertKey = (key: `request:${string}`) => `response:${key.replace(/^request:/, '')}` as const;
 
@@ -87,7 +90,9 @@ const cors = async (promiseOrResponse: Response | Promise<Response>) => {
 export default {
 	async fetch(request, env, ctx): Promise<Response> {
 		const key = await addRequest(request, env);
-		return cors(getResponse(convertKey(key), env));
+		const response = cors(getResponse(convertKey(key), env));
+		await removeResponse(convertKey(key), env);
+		return response;
 		// try {
 		// } catch (error) {
 		// 	if (error instanceof Error) {

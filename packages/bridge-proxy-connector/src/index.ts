@@ -26,9 +26,11 @@ const getRequest = async (env: Env) => {
 	}
 	return;
 };
-
 const setResponse = async (key: `response:${string}`, responseObject: ResponseObject, env: Env) => {
 	await env.bridge_proxy_cache.put(key, btoa(JSON.stringify(responseObject)));
+};
+const removeRequest = async (key: `request:${string}`, env: Env) => {
+	await env.bridge_proxy_cache.delete(key);
 };
 
 const json = async (promiseOrResponse: Response | Promise<Response>) => {
@@ -58,6 +60,8 @@ export default {
 			case 'POST': {
 				const result: { key: `response:${string}`; responseObject: ResponseObject } = await request.json();
 				await setResponse(result.key, result.responseObject, env);
+				const key = `request:${result.key.replace(/^response:/, '')}` as const;
+				await removeRequest(key, env);
 				return cors(json(new Response(JSON.stringify({}), { status: 201 })));
 			}
 		}

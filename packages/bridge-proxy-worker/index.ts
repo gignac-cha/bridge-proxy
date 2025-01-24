@@ -6,6 +6,7 @@ declare namespace NodeJS {
   interface ProcessEnv {
     TARGET_SERVER_HOST?: string;
     BRIDGE_PROXY_CONNECTOR_HOST?: string;
+    WORK_TIMEOUT?: string;
   }
 }
 
@@ -57,7 +58,9 @@ const work = async (serverHost: string, connectorHost: string) => {
   });
   console.log(`* server response status: ${connectorResponse.status}`);
   console.log(`* server response statusText: ${connectorResponse.statusText}`);
-  console.log(`* server response headers: ${JSON.stringify(Object.fromEntries([...serverResponse.headers.entries()]), null, 2)}`);
+  console.log(
+    `* server response headers: ${JSON.stringify(Object.fromEntries([...serverResponse.headers.entries()]), null, 2)}`,
+  );
   const key = `response:${requestData.key.replace(/^request:/, '')}` as const;
   const status = serverResponse.status;
   const statusText = serverResponse.statusText;
@@ -86,11 +89,19 @@ Promise.resolve().then(async () => {
   if (!process.env.BRIDGE_PROXY_CONNECTOR_HOST) {
     throw Error(`'BRIDGE_PROXY_CONNECTOR_HOST' is not defined.`);
   }
+  if (!('WORK_TIMEOUT' in process.env)) {
+    throw Error(`'WORK_TIMEOUT' is not defined.`);
+  }
+  if (!process.env.WORK_TIMEOUT) {
+    throw Error(`'WORK_TIMEOUT' is not defined.`);
+  }
   console.log(`* target server host: ${process.env.TARGET_SERVER_HOST}`);
   console.log(`* bridge proxy connector host: ${process.env.BRIDGE_PROXY_CONNECTOR_HOST}`);
+  console.log(`* work timeout: ${process.env.WORK_TIMEOUT}`);
+  const workTimeout = isNaN(parseInt(process.env.WORK_TIMEOUT)) ? 60 * 1000 : parseInt(process.env.WORK_TIMEOUT);
+  console.log(`* work timeout: ${workTimeout}`);
   while (true) {
     await work(process.env.TARGET_SERVER_HOST, process.env.BRIDGE_PROXY_CONNECTOR_HOST);
-    // await timeout(1000 / 6);
-    await timeout(10000);
+    await timeout(workTimeout);
   }
 });
